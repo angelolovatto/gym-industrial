@@ -6,7 +6,7 @@ import pytest
 import gym_industrial
 
 
-SETPOINT = tuple(p * 10 for p in range(11))
+SETPOINT = (0, 50, 100)
 REWARD_TYPE = "classic delta".split()
 ACTION_TYPE = "discrete continuous".split()
 OBSERVATION = "visible markovian full".split()
