@@ -58,7 +58,9 @@ class IndustrialBenchmarkEnv(gym.Env):
             # Observation bounds for full state
             ob_low = np.concatenate([ob_low, np.array([-np.inf] * 24)])
             ob_high = np.concatenate([ob_high, np.array([np.inf] * 24)])
-        self.observation_space = spaces.Box(low=ob_low, high=ob_high, dtype=np.float32)
+        self.observation_space = spaces.Box(
+            low=ob_low.astype("f"), high=ob_high.astype("f")
+        )
 
         # Action space and the observation space
         if self.action_type == "discrete":
@@ -78,7 +80,7 @@ class IndustrialBenchmarkEnv(gym.Env):
         elif self.action_type == "continuous":
             # Continuous action space for each steering [-1,1]
             ac_low = np.array([-1, -1, -1])
-            self.action_space = spaces.Box(ac_low, -ac_low, dtype=np.float32)
+            self.action_space = spaces.Box(ac_low.astype("f"), -ac_low.astype("f"))
         else:
             raise ValueError(
                 "Invalid action type {}. "
