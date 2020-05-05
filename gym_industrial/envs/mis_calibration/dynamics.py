@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 
-@dataclass(frozen=True)
+@dataclass
 class MCParams:
     """Parameters for computing the effective shift in Mis-calibration dynamics."""
 

@@ -21,8 +21,8 @@ class MisCalibrationEnv(gym.Env):
     def __init__(self, setpoint=50, safe_zone=None):
         super().__init__()
         self.observation_space = Box(
-            low=np.array([0, 0, -1, -1, -6], dtype=np.float32),
-            high=np.array([100, 100, 1, 1, 6], dtype=np.float32),
+            low=np.array([0, 0], dtype=np.float32),
+            high=np.array([100, 100], dtype=np.float32),
         )
         self.action_space = Box(
             low=np.array([0], dtype=np.float32), high=np.array([100], dtype=np.float32)
