@@ -1,6 +1,6 @@
 # Industrial Benchmark for Gym
 
-`gym-industrial` is a standalone Python implementation of the [Industrial Benchmark](https://github.com/siemens/industrialbenchmark) for OpenAI Gym.
+`gym-industrial` is a standalone Python re-implementation of the [Industrial Benchmark](https://github.com/siemens/industrialbenchmark) for OpenAI Gym.
 
 ## Installation
 
