@@ -55,7 +55,7 @@ class MisCalibrationEnv(gym.Env):
 
         state = self.state
         self.state = next_state = self._transition_fn(self.state, action)
-        reward = self._reward_fn(state, action, next_state)
+        reward = self._reward_fn(state, action, next_state).item()
         done = self._terminal(next_state)
 
         return self._get_obs(next_state), reward, done, {}
