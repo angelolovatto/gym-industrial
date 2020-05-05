@@ -25,7 +25,7 @@ class MisCalibrationEnv(gym.Env):
             high=np.array([100, 100], dtype=np.float32),
         )
         self.action_space = Box(
-            low=np.array([0], dtype=np.float32), high=np.array([100], dtype=np.float32)
+            low=np.array([-1], dtype=np.float32), high=np.array([1], dtype=np.float32)
         )
 
         self._setpoint = setpoint
