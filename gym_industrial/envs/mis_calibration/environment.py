@@ -55,11 +55,10 @@ class MisCalibrationEnv(gym.Env):
 
         state = self.state
         self.state = next_state = self._transition_fn(self.state, action)
-        next_obs = self._get_obs(next_state)
         reward = self._reward_fn(state, action, next_state)
         done = self._terminal(next_state)
 
-        return next_obs, reward, done, {}
+        return self._get_obs(next_state), reward, done, {}
 
     def _transition_fn(self, state, action):
         # pylint:disable=unbalanced-tuple-unpacking
