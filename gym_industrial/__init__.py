@@ -13,3 +13,9 @@ gym.register(
     entry_point="gym_industrial.envs.mis_calibration:MisCalibrationEnv",
     max_episode_steps=1000,
 )
+
+gym.register(
+    id="IBFatigue-v0",
+    entry_point="gym_industrial.envs.fatigue:FatigueEnv",
+    max_episode_steps=1000,
+)
