@@ -19,3 +19,10 @@ gym.register(
     entry_point="gym_industrial.envs.fatigue:FatigueEnv",
     max_episode_steps=1000,
 )
+
+
+gym.register(
+    id="IBOperationalCost-v0",
+    entry_point="gym_industrial.envs.operational_cost:OperationalCostEnv",
+    max_episode_steps=1000,
+)
