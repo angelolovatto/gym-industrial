@@ -70,11 +70,15 @@ class MisCalibrationEnv(gym.Env):
         # pylint:disable=unbalanced-tuple-unpacking
         setpoint, shift, domain, system_response, phi = np.split(state, 5, axis=-1)
 
-        shift = self.update_shift(shift, action)
+        shift = self._apply_action(action, shift)
         domain, system_response, phi = self._dynamics.transition(
             setpoint, shift, domain, system_response, phi
         )
         return np.concatenate([setpoint, shift, domain, system_response, phi], axis=-1)
+
+    def _apply_action(self, action, shift):
+        """Apply Equation (4)."""
+        return np.clip(shift + action * self.action_scale, 0, 100)
 
     def _reward_fn(self, state, action, next_state):
         # pylint:disable=unused-argument
@@ -85,10 +89,6 @@ class MisCalibrationEnv(gym.Env):
     @staticmethod
     def _terminal(_):
         return False
-
-    def update_shift(self, shift, action):
-        """Apply Equation (4)."""
-        return np.clip(shift + action * self.action_scale, 0, 100)
 
     @staticmethod
     def _get_obs(state):

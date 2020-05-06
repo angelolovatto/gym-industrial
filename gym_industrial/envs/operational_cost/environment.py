@@ -74,9 +74,18 @@ class OperationalCostEnv(gym.Env):
         visible, theta_vec = state[..., :3], state[..., 3:]
         setpoint, velocity, gain = np.split(visible, 3, axis=-1)
 
-        velocity, gain = self.apply_action(action, velocity, gain)
+        velocity, gain = self._apply_action(action, velocity, gain)
         theta_vec = self._dynamics.transition(setpoint, velocity, gain, theta_vec)
         return np.concatenate([setpoint, velocity, gain, theta_vec], axis=-1)
+
+    @staticmethod
+    def _apply_action(action, velocity, gain):
+        """Apply Equations (2,3)."""
+        # pylint:disable=unbalanced-tuple-unpacking
+        delta_v, delta_g = np.split(action, 2, axis=-1)
+        velocity = np.clip(velocity + delta_v, 0, 100)
+        gain = np.clip(gain + delta_g * 10, 0, 100)
+        return velocity, gain
 
     def _reward_fn(self, state, action, next_state):
         # pylint:disable=unused-argument
@@ -86,15 +95,6 @@ class OperationalCostEnv(gym.Env):
     @staticmethod
     def _terminal(_):
         return False
-
-    @staticmethod
-    def apply_action(action, velocity, gain):
-        """Apply Equations (2,3)."""
-        # pylint:disable=unbalanced-tuple-unpacking
-        delta_v, delta_g = np.split(action, 2, axis=-1)
-        velocity = np.clip(velocity + delta_v, 0, 100)
-        gain = np.clip(gain + delta_g * 10, 0, 100)
-        return velocity, gain
 
     @staticmethod
     def _get_obs(state):
