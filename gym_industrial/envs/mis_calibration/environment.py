@@ -5,15 +5,22 @@ from gym.utils import seeding
 import numpy as np
 
 from .dynamics import MisCalibrationDynamics
-from .goldstone import PenaltyLandscape
 
 
 class MisCalibrationEnv(gym.Env):
-    """The sub-dynamics of mis-calibration are influenced by external driver setpoint p
-    and steering shift h. The goal is to reward an agent to oscillate in h in a pre-
-    -defined frequency around a specific operation point determined by setpoint p.
-    Thereby, the reward topology is inspired by an example from quantum physics, namely
-    Goldstone’s ”Mexican hat” potential."""
+    """Standalone mis-calibration subsystem as a Gym environment.
+
+    From the paper:
+    > The sub-dynamics of mis-calibration are influenced by external driver setpoint p
+    > and steering shift h. The goal is to reward an agent to oscillate in h in a pre-
+    > -defined frequency around a specific operation point determined by setpoint p.
+    > Thereby, the reward topology is inspired by an example from quantum physics,
+    > namely Goldstone’s ”Mexican hat” potential.
+
+    Args:
+        setpoint (float): setpoint parameter for the dynamics, as described in the paper
+        safe_zone (float): the radius of the safe zone.
+    """
 
     # pylint:disable=abstract-method
     action_scale = 20 * np.sin(15 * np.pi / 180) / 0.9
@@ -31,7 +38,6 @@ class MisCalibrationEnv(gym.Env):
         self._setpoint = setpoint
         safe_zone = safe_zone or np.sin(np.pi * 15 / 180) / 2
         self._dynamics = MisCalibrationDynamics(safe_zone)
-        self._goldstone = PenaltyLandscape(safe_zone)
         self.state = None
         self.seed()
 
@@ -64,28 +70,25 @@ class MisCalibrationEnv(gym.Env):
         # pylint:disable=unbalanced-tuple-unpacking
         setpoint, shift, domain, system_response, phi = np.split(state, 5, axis=-1)
 
-        shift = self.update_shift(shift, action)
+        shift = self._apply_action(action, shift)
         domain, system_response, phi = self._dynamics.transition(
             setpoint, shift, domain, system_response, phi
         )
         return np.concatenate([setpoint, shift, domain, system_response, phi], axis=-1)
 
+    def _apply_action(self, action, shift):
+        """Apply Equation (4)."""
+        return np.clip(shift + action * self.action_scale, 0, 100)
+
     def _reward_fn(self, state, action, next_state):
         # pylint:disable=unused-argument
         setpoint, shift = next_state[..., 0], next_state[..., 1]
-        effective_shift = self._dynamics.effective_shift(setpoint, shift)
-
         phi = next_state[..., -1]
-        reward = self._goldstone.reward(phi, effective_shift)
-        return reward
+        return -self._dynamics.penalty(setpoint, shift, phi)
 
     @staticmethod
     def _terminal(_):
         return False
-
-    def update_shift(self, shift, action):
-        """Apply Equation (4)."""
-        return np.clip(shift + action * self.action_scale, 0, 100)
 
     @staticmethod
     def _get_obs(state):

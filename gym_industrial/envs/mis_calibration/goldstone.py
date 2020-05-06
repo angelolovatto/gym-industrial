@@ -39,7 +39,7 @@ class PenaltyLandscape:
         """The radius of the safe zone"""
         return self._safe_zone
 
-    def reward(self, phi, effective_shift):
+    def penalty(self, phi, effective_shift):
         """Compute m(\\phi, h^e) as given by Equation (17)."""
         rho_s = self.rho_s(phi)
         omega = self.omega(rho_s, effective_shift)

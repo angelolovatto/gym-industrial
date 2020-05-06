@@ -27,9 +27,10 @@ def test_reward_type(classic_reward_ib, delta_reward_ib):
     delta_reward_ib.seed(42)
     delta_reward_ib.reset()
 
-    _, rew, _, _ = classic_reward_ib.step([0.5] * 3)
-    _, rew2, _, _ = classic_reward_ib.step([0.5] * 3)
-    _, _, _, _ = delta_reward_ib.step([0.5] * 3)
-    _, rew_, _, _ = delta_reward_ib.step([0.5] * 3)
+    act = np.array([0.5] * 3)
+    _, rew, _, _ = classic_reward_ib.step(act)
+    _, rew2, _, _ = classic_reward_ib.step(act)
+    _, _, _, _ = delta_reward_ib.step(act)
+    _, rew_, _, _ = delta_reward_ib.step(act)
 
     assert np.allclose(rew2 - rew, rew_)

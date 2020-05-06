@@ -9,7 +9,7 @@ import gym_industrial
 SETPOINT = (0, 50, 100)
 REWARD_TYPE = "classic delta".split()
 ACTION_TYPE = "discrete continuous".split()
-OBSERVATION = "visible markovian full".split()
+OBS_TYPE = "visible markovian".split()
 
 
 @pytest.fixture(params=SETPOINT, ids=(f"setpoint({p})" for p in SETPOINT))
@@ -27,18 +27,18 @@ def action_type(request):
     return request.param
 
 
-@pytest.fixture(params=OBSERVATION, ids=(f"observation({p})" for p in OBSERVATION))
-def observation(request):
+@pytest.fixture(params=OBS_TYPE, ids=(f"observation({p})" for p in OBS_TYPE))
+def obs_type(request):
     return request.param
 
 
 @pytest.fixture
-def kwargs(setpoint, reward_type, action_type, observation):
+def kwargs(setpoint, reward_type, action_type, obs_type):
     return dict(
         setpoint=setpoint,
         reward_type=reward_type,
         action_type=action_type,
-        observation=observation,
+        obs_type=obs_type,
     )
 
 

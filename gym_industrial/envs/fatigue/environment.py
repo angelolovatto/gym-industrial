@@ -8,9 +8,19 @@ from .dynamics import FatigueDynamics
 
 
 class FatigueEnv(gym.Env):
-    """The sub-dynamics of fatigue are influenced by the same variables as the
-    sub-dynamics of operational cost, i.e., setpoint p, velocity v, and gain g.
-    When changing the steerings velocity v and gain g, fatigue will be increased."""
+    """Standalone fatigue subsystem as a Gym environment.
+
+    From the paper:
+    > The sub-dynamics of fatigue are influenced by the same variables as the sub-
+    > -dynamics of operational cost, i.e., setpoint p, velocity v, and gain g. The IB is
+    > designed in such a way that, when changing the steerings velocity v and gain g as
+    > to reduce the operational cost, fatigue will be increased, leading to the desired
+    > multi-criterial task, with two reward- components showing opposite dependencies on
+    > the actions.
+
+    Args:
+        setpoint (float): setpoint parameter for the dynamics, as described in the paper
+    """
 
     # pylint:disable=abstract-method
 
@@ -59,11 +69,20 @@ class FatigueEnv(gym.Env):
         # pylint:disable=unbalanced-tuple-unpacking
         setpoint, velocity, gain, mu_v, mu_g, _ = np.split(state, 6, axis=-1)
 
-        velocity, gain = self.apply_action(action, velocity, gain)
+        velocity, gain = self._apply_action(action, velocity, gain)
         mu_v, mu_g, fatigue = self._dynamics.transition(
             setpoint, velocity, gain, mu_v, mu_g
         )
         return np.concatenate([setpoint, velocity, gain, mu_v, mu_g, fatigue], axis=-1)
+
+    @staticmethod
+    def _apply_action(action, velocity, gain):
+        """Apply Equations (2,3)."""
+        # pylint:disable=unbalanced-tuple-unpacking
+        delta_v, delta_g = np.split(action, 2, axis=-1)
+        velocity = np.clip(velocity + delta_v, 0, 100)
+        gain = np.clip(gain + delta_g * 10, 0, 100)
+        return velocity, gain
 
     @staticmethod
     def _reward_fn(state, action, next_state):
@@ -73,15 +92,6 @@ class FatigueEnv(gym.Env):
     @staticmethod
     def _terminal(_):
         return False
-
-    @staticmethod
-    def apply_action(action, velocity, gain):
-        """Apply Equations (2,3)."""
-        # pylint:disable=unbalanced-tuple-unpacking
-        delta_v, delta_g = np.split(action, 2, axis=-1)
-        velocity = np.clip(velocity + delta_v, 0, 100)
-        gain = np.clip(gain + delta_g * 10, 0, 100)
-        return velocity, gain
 
     @staticmethod
     def _get_obs(state):

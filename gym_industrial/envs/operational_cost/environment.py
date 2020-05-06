@@ -8,12 +8,24 @@ from .dynamics import OperationalCostDynamics
 
 
 class OperationalCostEnv(gym.Env):
-    """The sub-dynamics of operational cost are influenced by the external driver
-    setpoint p and two of the three steerings, velocity v and gain g.
+    """Standalone operational cost subsystem as a Gym environment.
 
-    Its observation is non-linear, depends on more than one influence, and is delayed
-    and blurred. All those effects have been observed in industrial applications, like
-    the heating process observable during combustion."""
+    From the paper:
+    > The sub-dynamics of operational cost are influenced by
+    > the external driver setpoint p and two of the three steerings, velocity v and
+    > gain g.
+
+    The observation of operational cost is delayed and blurred by a convolution of past
+    operational costs.
+
+    > The motivation for this dynamical behavior is that it is non- linear, it depends
+    > on more than one influence, and it is delayed and blurred. All those effects have
+    > been observed in industrial applications, like the heating process observable
+    > during combustion.
+
+    Args:
+        setpoint (float): setpoint parameter for the dynamics, as described in the paper
+    """
 
     # pylint:disable=abstract-method
 
@@ -62,9 +74,18 @@ class OperationalCostEnv(gym.Env):
         visible, theta_vec = state[..., :3], state[..., 3:]
         setpoint, velocity, gain = np.split(visible, 3, axis=-1)
 
-        velocity, gain = self.apply_action(action, velocity, gain)
+        velocity, gain = self._apply_action(action, velocity, gain)
         theta_vec = self._dynamics.transition(setpoint, velocity, gain, theta_vec)
         return np.concatenate([setpoint, velocity, gain, theta_vec], axis=-1)
+
+    @staticmethod
+    def _apply_action(action, velocity, gain):
+        """Apply Equations (2,3)."""
+        # pylint:disable=unbalanced-tuple-unpacking
+        delta_v, delta_g = np.split(action, 2, axis=-1)
+        velocity = np.clip(velocity + delta_v, 0, 100)
+        gain = np.clip(gain + delta_g * 10, 0, 100)
+        return velocity, gain
 
     def _reward_fn(self, state, action, next_state):
         # pylint:disable=unused-argument
@@ -74,15 +95,6 @@ class OperationalCostEnv(gym.Env):
     @staticmethod
     def _terminal(_):
         return False
-
-    @staticmethod
-    def apply_action(action, velocity, gain):
-        """Apply Equations (2,3)."""
-        # pylint:disable=unbalanced-tuple-unpacking
-        delta_v, delta_g = np.split(action, 2, axis=-1)
-        velocity = np.clip(velocity + delta_v, 0, 100)
-        gain = np.clip(gain + delta_g * 10, 0, 100)
-        return velocity, gain
 
     @staticmethod
     def _get_obs(state):
