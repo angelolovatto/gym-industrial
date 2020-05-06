@@ -3,9 +3,11 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from .goldstone import PenaltyLandscape
+
 
 @dataclass
-class MCParams:
+class MisCalibrationParams:
     """Parameters for computing the effective shift in Mis-calibration dynamics."""
 
     gs_bound: float = 1.5
@@ -22,26 +24,25 @@ class MisCalibrationDynamics:
     Supports batched transitions.
 
     Args:
-       safe_zone (float): the radius of the safe zone.
+        safe_zone (float): the radius of the safe zone.
     """
 
     def __init__(self, safe_zone, number_steps=24):
-        self._safe_zone = self._check_safe_zone(safe_zone)
         self._strongest_penality_abs_idx = self.compute_strongest_penalty_abs_idx(
             number_steps
         )
-        self.params = MCParams()
-
-    @staticmethod
-    def _check_safe_zone(safe_zone):
-        if safe_zone < 0:
-            raise ValueError("safe_zone must be non-negative")
-        return safe_zone
+        self.params = MisCalibrationParams()
+        self.goldstone = PenaltyLandscape(safe_zone)
 
     @property
     def safe_zone(self):
         """Radius of the safe zone."""
-        return self._safe_zone
+        return self.goldstone.safe_zone
+
+    def penalty(self, setpoint, shift, phi):
+        """Compute penalty by inferring effective shift and applying Equation (17)."""
+        effective_shift = self.effective_shift(setpoint, shift)
+        return self.goldstone.penalty(phi, effective_shift)
 
     def transition(self, setpoint, shift, domain, system_response, phi):
         """Compute one timestep of dynamics transition."""
@@ -76,7 +77,7 @@ class MisCalibrationDynamics:
     def domain(self, domain, effective_shift):
         """Apply Equation (9)."""
         return np.where(
-            np.abs(effective_shift) <= self._safe_zone, domain, np.sign(effective_shift)
+            np.abs(effective_shift) <= self.safe_zone, domain, np.sign(effective_shift)
         )
 
     @staticmethod
@@ -92,7 +93,7 @@ class MisCalibrationDynamics:
         Compute the change in phi according to Equation (12). Recall that phi moves in
         discrete unit steps."""
         step = np.where(
-            np.abs(effective_shift) <= self._safe_zone,
+            np.abs(effective_shift) <= self.safe_zone,
             # cool down: when effective_shift close to zero
             -np.sign(phi),
             np.where(
@@ -138,7 +139,7 @@ class MisCalibrationDynamics:
 
     def reset_if_needed(self, domain, system_response, phi, effective_shift):
         """Apply Equations (15, 16)."""
-        cond = (np.abs(effective_shift) <= self._safe_zone) & (phi == 0)
+        cond = (np.abs(effective_shift) <= self.safe_zone) & (phi == 0)
         domain = np.where(cond, np.ones_like(domain), domain)
         system_response = np.where(cond, np.ones_like(system_response), system_response)
         return domain, system_response

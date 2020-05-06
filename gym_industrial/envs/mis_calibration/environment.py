@@ -5,7 +5,6 @@ from gym.utils import seeding
 import numpy as np
 
 from .dynamics import MisCalibrationDynamics
-from .goldstone import PenaltyLandscape
 
 
 class MisCalibrationEnv(gym.Env):
@@ -39,7 +38,6 @@ class MisCalibrationEnv(gym.Env):
         self._setpoint = setpoint
         safe_zone = safe_zone or np.sin(np.pi * 15 / 180) / 2
         self._dynamics = MisCalibrationDynamics(safe_zone)
-        self._goldstone = PenaltyLandscape(safe_zone)
         self.state = None
         self.seed()
 
@@ -81,11 +79,8 @@ class MisCalibrationEnv(gym.Env):
     def _reward_fn(self, state, action, next_state):
         # pylint:disable=unused-argument
         setpoint, shift = next_state[..., 0], next_state[..., 1]
-        effective_shift = self._dynamics.effective_shift(setpoint, shift)
-
         phi = next_state[..., -1]
-        reward = self._goldstone.reward(phi, effective_shift)
-        return reward
+        return -self._dynamics.penalty(setpoint, shift, phi)
 
     @staticmethod
     def _terminal(_):
