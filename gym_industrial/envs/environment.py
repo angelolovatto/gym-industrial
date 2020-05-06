@@ -158,7 +158,7 @@ class IndustrialBenchmarkEnv(gym.Env):
         reward = self._reward_fn(state, action, next_state).item()
         done = self._terminal(next_state)
 
-        return self._get_obs(next_state), reward, done, {}
+        return self._get_obs(next_state), reward, done, self._get_info()
 
     def _get_obs(self, state):
         visible = state[..., :6]
@@ -183,12 +183,35 @@ class IndustrialBenchmarkEnv(gym.Env):
         )
         return ternary - 1
 
+    def _get_info(self):
+        # pylint:disable=unbalanced-tuple-unpacking
+        state = self.state
+        setpoint, velocity, gain, shift = np.split(state[..., :4], 4, axis=-1)
+        consumption, fatigue = state[..., 4], state[..., 5]
+        theta_vec = state[..., 6:16]
+        domain, system_response, phi = np.split(state[..., 16:19], 3, axis=-1)
+        mu_v, mu_g = state[..., 19], state[..., 20]
+        return {
+            "setpoint": setpoint,
+            "velocity": velocity,
+            "gain": gain,
+            "shift": shift,
+            "consumption": consumption,
+            "fatigue": fatigue,
+            "op_cost_history": theta_vec,
+            "domain": domain,
+            "system_response": system_response,
+            "phi": phi,
+            "hidden_velocity": mu_v,
+            "hidden_gain": mu_g,
+        }
+
     def _transition_fn(self, state, action):
         # pylint:disable=unbalanced-tuple-unpacking
         setpoint, velocity, gain, shift = np.split(state[..., :4], 4, axis=-1)
         theta_vec = state[..., 6:16]
         domain, system_response, phi = np.split(state[..., 16:19], 3, axis=-1)
-        mu_v, mu_g = np.split(state[..., 19:], 2, axis=-1)
+        mu_v, mu_g = state[..., 19], state[..., 20]
 
         velocity, gain, shift = self._apply_action(action, velocity, gain, shift)
         theta_vec = self.dynamics.operational_cost.transition(
