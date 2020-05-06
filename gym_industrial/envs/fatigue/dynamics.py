@@ -124,7 +124,7 @@ class FatigueDynamics:
 
     def sample_alpha(self, hidden_velocity, eta_v, hidden_gain, eta_g):
         """Equation 23."""
-        gauss = self.np_random.normal(2.4, 0.4, size=hidden_velocity.size)
+        gauss = self.np_random.normal(2.4, 0.4, size=hidden_velocity.shape)
         return np.where(
             np.maximum(hidden_velocity, hidden_gain) >= self.params.amplification_max,
             1.0 / (1.0 + np.exp(-gauss)),
