@@ -1,25 +1,25 @@
-dist: xenial   # required for Python >= 3.7
+dist: xenial
 language: python
 python:
-  - "3.7"
-# command to install dependencies
+- '3.7'
 install:
-  - sudo apt-get update
-  # We do this conditionally because it saves us some downloading if the
-  # version is the same.
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - source "$HOME/miniconda/etc/profile.d/conda.sh"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  # Useful for debugging any issues with conda
-  - conda info -a
-
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
-  - conda activate test-environment
-  - conda install pytest pytorch torchvision -c pytorch
-  - pip install .
-# command to run tests
+- sudo apt-get update
+- wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+- bash miniconda.sh -b -p $HOME/miniconda
+- source "$HOME/miniconda/etc/profile.d/conda.sh"
+- hash -r
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+- conda info -a
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+- conda activate test-environment
+- conda install pytest pytorch torchvision -c pytorch
+- pip install .
 script: pytest
+deploy:
+  provider: pypi
+  user: __token__
+  password:
+    secure: AqptqsBTjMbXD0clyijosUbXzQaAlY1Zmo/meGIak7SShtgM39FL8ndGoW9tUKwGQIr5KREPGwTOeWbBDGO4qf9n5ZsNYhRws5cXcgN394Wh33sPKrbCIc1YtcGGP7QcLcPpfh+oxiKXIwd1Hj0XlciRruUB5STeXGDn9IeevBWe9F+5n8wnokTdl5I8ZniSZNChz/DmwypcilIBBAPFZGgp1NNyvMy9nHHbuOzX9gi7xBOBniJNwmhssAFNdrRLu7LQ8HLxwSIdBBFzRzfDTSXdGge7BmYpS758Enix94K5hsbQk7+TPumUvNSR0KVgM+0G8kcOs2P3djmgMftuDi/0/BlmIAkokIDMCNGCwQp6rkU+Rtv7y+ZG5PZ6xXxoVmgL9TekGBoJKeg9rcnbEGyFI/R/zW5ef/oQpinzptQ+/X8L+VEf6L1VuRPC/nSVeFaTCuiQnE8uz5IIWXM3YgP4TvvNUPFj8CH8xmTOFa0LnjrQ6neCCGsZV+Q3RYRN6580mLxlUA9rXHgoA6UZAF4Muh6YCqlGOo0QU6hBKOTJQW9h/a9oblvpYa+iAQd5sg6enxzg9HKk0TEPT7YUs6qkkRtRLKyvBL2kDC492sG2PDEYpaTfsxRENMhWnIXP/UqbLbPvPDp5O6E0eAFQvIVn8LyddIyzHKR7hZ6bdIc=
+  on:
+    tags: true
