@@ -12,7 +12,7 @@ pip install gym-industrial
 
 The IB's subdynamics have also been implemented as Gym environments.
 
-| System | environment id | 
+| System | environment id |
 | -------- | -------- |
 | Industrial Benchmark | IndustrialBenchmark-v0 |
 | Operational Cost | IBOperationalCost-v0 |
@@ -21,12 +21,12 @@ The IB's subdynamics have also been implemented as Gym environments.
 
 
 ## Subdynamics Stochastic Computation Graphs
-The following are views of the Industrial Benchmark subdynamics, plus the reward function, as stochastic computation graphs (SCG). 
+The following are views of the Industrial Benchmark subdynamics, plus the reward function, as stochastic computation graphs (SCG).
 
 The graph notation used and the SCG definition are taken from [Gradient Estimation Using Stochastic Computation Graphs](http://papers.nips.cc/paper/5899-gradient-estimation-using-stochastic-computation-graphs). Squares denote deterministic nodes and circles, stochastic nodes.
 > Definition 1 (Stochastic Computation Graph). A directed, acyclic graph, with three types of nodes:
 > 1. Input nodes, which are set externally, including the parameters we differentiate with respect to.
-> 2. Deterministic nodes, which are functions of their parents. 
+> 2. Deterministic nodes, which are functions of their parents.
 > 3. Stochastic nodes, which are distributed conditionally on their parents.
 Each parent v ofa non-input node w is connected to it by a directed edge (v, w).
 
