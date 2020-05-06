@@ -8,12 +8,24 @@ from .dynamics import OperationalCostDynamics
 
 
 class OperationalCostEnv(gym.Env):
-    """The sub-dynamics of operational cost are influenced by the external driver
-    setpoint p and two of the three steerings, velocity v and gain g.
+    """Standalone operational cost subsystem as a Gym environment.
 
-    Its observation is non-linear, depends on more than one influence, and is delayed
-    and blurred. All those effects have been observed in industrial applications, like
-    the heating process observable during combustion."""
+    From the paper:
+    > The sub-dynamics of operational cost are influenced by
+    > the external driver setpoint p and two of the three steerings, velocity v and
+    > gain g.
+
+    The observation of operational cost is delayed and blurred by a convolution of past
+    operational costs.
+
+    > The motivation for this dynamical behavior is that it is non- linear, it depends
+    > on more than one influence, and it is delayed and blurred. All those effects have
+    > been observed in industrial applications, like the heating process observable
+    > during combustion.
+
+    Args:
+        setpoint (float): setpoint parameter for the dynamics, as described in the paper
+    """
 
     # pylint:disable=abstract-method
 

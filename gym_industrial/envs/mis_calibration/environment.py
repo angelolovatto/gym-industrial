@@ -9,11 +9,19 @@ from .goldstone import PenaltyLandscape
 
 
 class MisCalibrationEnv(gym.Env):
-    """The sub-dynamics of mis-calibration are influenced by external driver setpoint p
-    and steering shift h. The goal is to reward an agent to oscillate in h in a pre-
-    -defined frequency around a specific operation point determined by setpoint p.
-    Thereby, the reward topology is inspired by an example from quantum physics, namely
-    Goldstone’s ”Mexican hat” potential."""
+    """Standalone mis-calibration subsystem as a Gym environment.
+
+    From the paper:
+    > The sub-dynamics of mis-calibration are influenced by external driver setpoint p
+    > and steering shift h. The goal is to reward an agent to oscillate in h in a pre-
+    > -defined frequency around a specific operation point determined by setpoint p.
+    > Thereby, the reward topology is inspired by an example from quantum physics,
+    > namely Goldstone’s ”Mexican hat” potential.
+
+    Args:
+        setpoint (float): setpoint parameter for the dynamics, as described in the paper
+        safe_zone (float): the radius of the safe zone.
+    """
 
     # pylint:disable=abstract-method
     action_scale = 20 * np.sin(15 * np.pi / 180) / 0.9

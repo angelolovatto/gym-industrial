@@ -8,9 +8,19 @@ from .dynamics import FatigueDynamics
 
 
 class FatigueEnv(gym.Env):
-    """The sub-dynamics of fatigue are influenced by the same variables as the
-    sub-dynamics of operational cost, i.e., setpoint p, velocity v, and gain g.
-    When changing the steerings velocity v and gain g, fatigue will be increased."""
+    """Standalone fatigue subsystem as a Gym environment.
+
+    From the paper:
+    > The sub-dynamics of fatigue are influenced by the same variables as the sub-
+    > -dynamics of operational cost, i.e., setpoint p, velocity v, and gain g. The IB is
+    > designed in such a way that, when changing the steerings velocity v and gain g as
+    > to reduce the operational cost, fatigue will be increased, leading to the desired
+    > multi-criterial task, with two reward- components showing opposite dependencies on
+    > the actions.
+
+    Args:
+        setpoint (float): setpoint parameter for the dynamics, as described in the paper
+    """
 
     # pylint:disable=abstract-method
 
