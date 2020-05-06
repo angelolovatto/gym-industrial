@@ -3,7 +3,7 @@ import collections
 from dataclasses import dataclass
 
 import gym
-from gym.spaces import Box
+from gym.spaces import Box, Discrete
 from gym.utils import seeding
 import numpy as np
 
@@ -26,6 +26,10 @@ class IndustrialBenchmarkParams:
     shift_scale: float = 20 * np.sin(15 * np.pi / 180) / 0.9
     safe_zone: float = np.sin(np.pi * 15 / 180) / 2
 
+    reward_type: str = None
+    action_type: str = None
+    obs_type: str = None
+
 
 class IndustrialBenchmarkEnv(gym.Env):
     """Standalone implementation of the Industrial Benchmark as a Gym environment.
@@ -39,25 +43,66 @@ class IndustrialBenchmarkEnv(gym.Env):
     > of finding optimal valve settings for gas turbines or optimal pitch angles and
     > rotor speeds for wind turbines.
 
+    Currently only supports a fixed setpoint.
+
     Args:
         setpoint (float): setpoint parameter for the dynamics, as described in the paper
+        reward_type (str): type of the reward function. Either 'classic' or 'delta'
+        obs_type (str): type of the observation. Either 'visible' or 'markovian'
     """
 
     # pylint:disable=abstract-method
 
-    def __init__(self, setpoint=50):
+    def __init__(
+        self,
+        setpoint=50,
+        reward_type="classic",
+        action_type="continuous",
+        obs_type="visible",
+    ):
         super().__init__()
-        self.observation_space = Box(
-            low=np.array([0] * 4 + [-np.inf] * 2, dtype=np.float32),
-            high=np.array([100] * 4 + [np.inf] * 2, dtype=np.float32),
-        )
-        self.action_space = Box(
-            low=np.array([-1] * 3, dtype=np.float32),
-            high=np.array([1] * 3, dtype=np.float32),
+        self._setpoint = setpoint
+        self.params = IndustrialBenchmarkParams(
+            reward_type=reward_type, action_type=action_type, obs_type=obs_type
         )
 
-        self._setpoint = setpoint
-        self.params = IndustrialBenchmarkParams()
+        if self.params.obs_type == "visible":
+            self.observation_space = Box(
+                low=np.array([0] * 4 + [-np.inf] * 2, dtype=np.float32),
+                high=np.array([100] * 4 + [np.inf] * 2, dtype=np.float32),
+            )
+        elif self.params.obs_type == "markovian":
+            self.observation_space = Box(
+                low=np.array(
+                    [0] * 4 + [-np.inf] * 11 + [-1, -1, -6] + [-np.inf] * 2,
+                    dtype=np.float32,
+                ),
+                high=np.array(
+                    [100] * 4 + [np.inf] * 11 + [1, 1, 6] + [np.inf] * 2,
+                    dtype=np.float32,
+                ),
+            )
+        else:
+            raise ValueError(
+                f"Invalid observation type {self.params.obs_type}. "
+                "`obs_type` can either be 'visible' or 'markovian'"
+            )
+
+        if self.params.action_type == "continuous":
+            self.action_space = Box(
+                low=np.array([-1] * 3, dtype=np.float32),
+                high=np.array([1] * 3, dtype=np.float32),
+            )
+        elif self.params.action_type == "discrete":
+            # Discrete action space with three different values per steerings for the
+            # three steerings (3^3 = 27)
+            self.action_space = Discrete(27)
+        else:
+            raise ValueError(
+                f"Invalid action type {self.params.action_type}. "
+                "`action_type` can either be 'discrete' or 'continuous'"
+            )
+
         self.dynamics = None
         self.state = None
         self.seed()
@@ -106,6 +151,7 @@ class IndustrialBenchmarkEnv(gym.Env):
 
     def step(self, action):
         assert action in self.action_space
+        action = self._get_action(action)
 
         state = self.state
         self.state = next_state = self._transition_fn(self.state, action)
@@ -113,6 +159,29 @@ class IndustrialBenchmarkEnv(gym.Env):
         done = self._terminal(next_state)
 
         return self._get_obs(next_state), reward, done, {}
+
+    def _get_obs(self, state):
+        visible = state[..., :6]
+        if self.params.obs_type == "visible":
+            return visible.astype(np.float32)
+
+        # current operational cost can be inferred from setpoint, velocity, and gain
+        oc_latent = state[..., 6:16]
+        oc_latent = oc_latent[..., 1:]
+
+        mc_latent = state[..., 16:19]
+        fat_latent = state[..., 19:]
+        return np.concatenate(
+            [visible, oc_latent, mc_latent, fat_latent], axis=-1
+        ).astype(np.float32)
+
+    def _get_action(self, action):
+        if self.params.action_type == "continuous":
+            return action
+        ternary = np.array(
+            [(action // 9) % 3, (action // 3) % 3, action % 3], dtype=np.float32
+        )
+        return ternary - 1
 
     def _transition_fn(self, state, action):
         # pylint:disable=unbalanced-tuple-unpacking
@@ -171,17 +240,20 @@ class IndustrialBenchmarkEnv(gym.Env):
         gauss = self.np_random.normal(0, 1 + 0.02 * c_hat)
         return c_hat + gauss
 
-    @staticmethod
-    def _reward_fn(state, action, next_state):
+    def _reward_fn(self, state, action, next_state):
         """Compute Equation (5)."""
         # pylint:disable=unused-argument
         consumption, fatigue = next_state[..., 4], next_state[..., 5]
-        return -consumption - 3 * fatigue
+        reward = -consumption - 3 * fatigue
+
+        if self.params.reward_type == "delta":
+            old_consumption, old_fatigue = state[..., 4], state[..., 5]
+            old_reward = -old_consumption - 3 * old_fatigue
+            reward -= old_reward
+
+        # reward is divided by 100 to improve learning
+        return reward / 100
 
     @staticmethod
     def _terminal(_):
         return False
-
-    @staticmethod
-    def _get_obs(state):
-        return state[..., :6].astype(np.float32)
