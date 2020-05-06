@@ -58,17 +58,17 @@ class IndustrialBenchmarkEnv(gym.Env):
 
         self._setpoint = setpoint
         self.params = IndustrialBenchmarkParams()
-        self.dynamics = IndustrialBenchmarkDynamics(
-            operational_cost=OperationalCostDynamics(),
-            mis_calibration=MisCalibrationDynamics(self.params.safe_zone),
-            fatigue=None,
-        )
+        self.dynamics = None
         self.state = None
         self.seed()
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
-        self.dynamics.fatigue = FatigueDynamics(self.np_random)
+        self.dynamics = IndustrialBenchmarkDynamics(
+            operational_cost=OperationalCostDynamics(),
+            mis_calibration=MisCalibrationDynamics(self.params.safe_zone),
+            fatigue=FatigueDynamics(self.np_random),
+        )
         return [seed]
 
     def reset(self):
