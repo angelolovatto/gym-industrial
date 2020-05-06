@@ -1,5 +1,5 @@
 # pylint:disable=missing-module-docstring
-from .industrial_benchmark import IndustrialBenchmarkEnv
+from .environment import IndustrialBenchmarkEnv
 
 
 __all__ = [
