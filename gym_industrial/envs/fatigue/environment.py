@@ -15,7 +15,7 @@ class FatigueEnv(gym.Env):
     > -dynamics of operational cost, i.e., setpoint p, velocity v, and gain g. The IB is
     > designed in such a way that, when changing the steerings velocity v and gain g as
     > to reduce the operational cost, fatigue will be increased, leading to the desired
-    > multi-criterial task, with two reward- components showing opposite dependencies on
+    > multi-criterial task, with two reward components showing opposite dependencies on
     > the actions.
 
     Args:
