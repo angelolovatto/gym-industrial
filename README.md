@@ -48,7 +48,7 @@ Node labels use the notation from the Industrial Benchmark [paper](https://arxiv
 ### Operational cost
 > The sub-dynamics of operational cost are influenced by the external driver setpoint p and two of the three steerings, velocity v and gain g.
 
-The observation of operational cost is delayed and blurred by a convolution of past operational costs. In the graph below, ![\overrightarrow{\theta}](https://render.githubusercontent.com/render/math?math=%5Coverrightarrow%7B%5Ctheta%7D) denotes a vector of the past 10 values of the hidden operational cost, $\theta$.
+The observation of operational cost is delayed and blurred by a convolution of past operational costs. In the graph below, ![\overrightarrow{\theta}](https://render.githubusercontent.com/render/math?math=%5Coverrightarrow%7B%5Ctheta%7D) denotes a vector of the past 10 values of the hidden operational cost, ![\theta](https://render.githubusercontent.com/render/math?math=%5Ctheta).
 
 > The motivation for this dynamical behavior is that it is non-linear, it depends on more than one influence, and it is delayed and blurred. All those effects have been observed in industrial applications, like the heating process observable during combustion.
 
