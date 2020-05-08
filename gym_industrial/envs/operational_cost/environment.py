@@ -71,13 +71,14 @@ class OperationalCostEnv(gym.Env):
 
     def _get_info(self):
         # pylint:disable=unbalanced-tuple-unpacking
-        setpoint, velocity, gain = np.split(self.state[:3], 3)
-        theta_vec = self.state[3:]
+        setpoint, velocity, gain = self.state[:3].tolist()
+        theta_vec = self.state[3:].tolist()
+        history = {f"op_cost(t-{i})": theta for i, theta in enumerate(theta_vec)}
         return {
             "setpoint": setpoint,
             "velocity": velocity,
             "gain": gain,
-            "op_cost_history": theta_vec,
+            **history,
         }
 
     def _transition_fn(self, state, action):
