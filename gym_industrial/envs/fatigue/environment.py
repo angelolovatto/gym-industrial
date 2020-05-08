@@ -63,7 +63,19 @@ class FatigueEnv(gym.Env):
         reward = self._reward_fn(state, action, next_state).item()
         done = self._terminal(next_state)
 
-        return self._get_obs(next_state), reward, done, {}
+        return self._get_obs(next_state), reward, done, self._get_info()
+
+    def _get_info(self):
+        # pylint:disable=unbalanced-tuple-unpacking
+        setpoint, velocity, gain, mu_v, mu_g, fatigue = np.split(self.state, 6)
+        return {
+            "setpoint": setpoint,
+            "velocity": velocity,
+            "gain": gain,
+            "fatigue": fatigue,
+            "hidden_velocity": mu_v,
+            "hidden_gain": mu_g,
+        }
 
     def _transition_fn(self, state, action):
         # pylint:disable=unbalanced-tuple-unpacking

@@ -67,7 +67,18 @@ class OperationalCostEnv(gym.Env):
         reward = self._reward_fn(state, action, next_state).item()
         done = self._terminal(next_state)
 
-        return self._get_obs(next_state), reward, done, {}
+        return self._get_obs(next_state), reward, done, self._get_info()
+
+    def _get_info(self):
+        # pylint:disable=unbalanced-tuple-unpacking
+        setpoint, velocity, gain = np.split(self.state[:3], 3)
+        theta_vec = self.state[3:]
+        return {
+            "setpoint": setpoint,
+            "velocity": velocity,
+            "gain": gain,
+            "op_cost_history": theta_vec,
+        }
 
     def _transition_fn(self, state, action):
         # pylint:disable=unbalanced-tuple-unpacking
