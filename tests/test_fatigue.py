@@ -23,7 +23,8 @@ def test_step(env):
     assert isinstance(info, dict)
 
     assert all(
-        k in info for k in "setpoint velocity gain hidden_velocity hidden_gain".split()
+        k in info and np.isscalar(info[k])
+        for k in "setpoint velocity gain hidden_velocity hidden_gain".split()
     )
 
 

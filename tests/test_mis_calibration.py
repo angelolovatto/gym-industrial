@@ -22,7 +22,10 @@ def test_step(env):
     assert isinstance(done, bool)
     assert isinstance(info, dict)
 
-    assert all(k in info for k in "setpoint shift domain system_response phi".split())
+    assert all(
+        k in info and np.isscalar(info[k])
+        for k in "setpoint shift domain system_response phi".split()
+    )
 
 
 def test_obs_consistency(env):
