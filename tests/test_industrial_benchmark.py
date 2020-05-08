@@ -12,27 +12,35 @@ ACTION_TYPE = "discrete continuous".split()
 OBS_TYPE = "visible markovian".split()
 
 
-@pytest.fixture(params=SETPOINT, ids=(f"setpoint({p})" for p in SETPOINT))
+@pytest.fixture(
+    params=SETPOINT, ids=(f"setpoint({p})" for p in SETPOINT), scope="module"
+)
 def setpoint(request):
     return request.param
 
 
-@pytest.fixture(params=REWARD_TYPE, ids=(f"reward_type({p})" for p in REWARD_TYPE))
+@pytest.fixture(
+    params=REWARD_TYPE, ids=(f"reward_type({p})" for p in REWARD_TYPE), scope="module"
+)
 def reward_type(request):
     return request.param
 
 
-@pytest.fixture(params=ACTION_TYPE, ids=(f"action_type({p})" for p in ACTION_TYPE))
+@pytest.fixture(
+    params=ACTION_TYPE, ids=(f"action_type({p})" for p in ACTION_TYPE), scope="module"
+)
 def action_type(request):
     return request.param
 
 
-@pytest.fixture(params=OBS_TYPE, ids=(f"observation({p})" for p in OBS_TYPE))
+@pytest.fixture(
+    params=OBS_TYPE, ids=(f"observation({p})" for p in OBS_TYPE), scope="module"
+)
 def obs_type(request):
     return request.param
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def kwargs(setpoint, reward_type, action_type, obs_type):
     return dict(
         setpoint=setpoint,
@@ -42,12 +50,12 @@ def kwargs(setpoint, reward_type, action_type, obs_type):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def env(kwargs):
     return gym.make("IndustrialBenchmark-v0", **kwargs)
 
 
-def test_env_interaction_loop(env):
+def test_step(env):
     obs = env.reset()
     assert obs in env.observation_space
 
@@ -63,6 +71,15 @@ def test_env_interaction_loop(env):
         for k in "setpoint velocity gain shift op_cost_history domain system_response "
         "phi hidden_velocity hidden_gain".split()
     )
+
+
+def test_obs_consistency(env):
+    obs, done = env.reset(), False
+    assert obs in env.observation_space
+
+    while not done:
+        obs, _, done, _ = env.step(env.action_space.sample())
+        assert obs in env.observation_space
 
 
 @pytest.fixture

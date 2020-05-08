@@ -6,12 +6,12 @@ import pytest
 import gym_industrial
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def env():
     return gym.make("IBMisCalibration-v0")
 
 
-def test_env_interaction_loop(env):
+def test_step(env):
     obs = env.reset()
     assert obs in env.observation_space
 
@@ -23,3 +23,12 @@ def test_env_interaction_loop(env):
     assert isinstance(info, dict)
 
     assert all(k in info for k in "setpoint shift domain system_response phi".split())
+
+
+def test_obs_consistency(env):
+    obs, done = env.reset(), False
+    assert obs in env.observation_space
+
+    while not done:
+        obs, _, done, _ = env.step(env.action_space.sample())
+        assert obs in env.observation_space
