@@ -62,7 +62,7 @@ The observation of operational cost is delayed and blurred by a convolution of p
 
 The Goldstone potential-inspired reward is denoted below by the ![m_{t+1}](https://render.githubusercontent.com/render/math?math=m_%7Bt%2B1%7D) node for ease of presentation. Details of the function can be found in the [implementation](gym_industrial/envs/mis_calibration/goldstone.py) or in Appendix B of the paper.
 
-![](https://i.imgur.com/VwS8RV9.png)
+<img src=https://i.imgur.com/VwS8RV9.png height=400>
 
 Below is a visual description, taken from the paper, of the penalty landscape and oscillating dynamics.
 
