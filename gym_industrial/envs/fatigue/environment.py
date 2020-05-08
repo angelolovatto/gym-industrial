@@ -67,7 +67,7 @@ class FatigueEnv(gym.Env):
 
     def _get_info(self):
         # pylint:disable=unbalanced-tuple-unpacking
-        setpoint, velocity, gain, mu_v, mu_g, fatigue = np.split(self.state, 6)
+        setpoint, velocity, gain, mu_v, mu_g, fatigue = self.state.tolist()
         return {
             "setpoint": setpoint,
             "velocity": velocity,

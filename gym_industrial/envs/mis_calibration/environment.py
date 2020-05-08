@@ -68,7 +68,7 @@ class MisCalibrationEnv(gym.Env):
 
     def _get_info(self):
         # pylint:disable=unbalanced-tuple-unpacking
-        setpoint, shift, domain, system_response, phi = np.split(self.state, 5)
+        setpoint, shift, domain, system_response, phi = self.state.tolist()
         return {
             "setpoint": setpoint,
             "shift": shift,

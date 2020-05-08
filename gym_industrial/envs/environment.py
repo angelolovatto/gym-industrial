@@ -186,11 +186,12 @@ class IndustrialBenchmarkEnv(gym.Env):
     def _get_info(self):
         # pylint:disable=unbalanced-tuple-unpacking
         state = self.state
-        setpoint, velocity, gain, shift = np.split(state[..., :4], 4, axis=-1)
-        consumption, fatigue = state[..., 4], state[..., 5]
-        theta_vec = state[..., 6:16]
-        domain, system_response, phi = np.split(state[..., 16:19], 3, axis=-1)
-        mu_v, mu_g = state[..., 19], state[..., 20]
+        setpoint, velocity, gain, shift = state[:4].tolist()
+        consumption, fatigue = state[4:6].tolist()
+        theta_vec = state[6:16].tolist()
+        history = {f"op_cost(t-{i})": theta for i, theta in enumerate(theta_vec)}
+        domain, system_response, phi = state[16:19].tolist()
+        mu_v, mu_g = state[19:].tolist()
         return {
             "setpoint": setpoint,
             "velocity": velocity,
@@ -198,7 +199,7 @@ class IndustrialBenchmarkEnv(gym.Env):
             "shift": shift,
             "consumption": consumption,
             "fatigue": fatigue,
-            "op_cost_history": theta_vec,
+            **history,
             "domain": domain,
             "system_response": system_response,
             "phi": phi,
