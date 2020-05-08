@@ -23,6 +23,3 @@ def test_env_interaction_loop(env):
     assert isinstance(info, dict)
 
     assert all(k in info for k in "setpoint shift domain system_response phi".split())
-
-    while not done:
-        _, _, done, _ = env.step(env.action_space.sample())

@@ -64,9 +64,6 @@ def test_env_interaction_loop(env):
         "phi hidden_velocity hidden_gain".split()
     )
 
-    while not done:
-        _, _, done, _ = env.step(env.action_space.sample())
-
 
 @pytest.fixture
 def classic_reward_ib():

@@ -25,6 +25,3 @@ def test_env_interaction_loop(env):
     assert all(
         k in info for k in "setpoint velocity gain hidden_velocity hidden_gain".split()
     )
-
-    while not done:
-        _, _, done, _ = env.step(env.action_space.sample())
