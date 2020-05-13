@@ -9,7 +9,7 @@ def read_file(file_path):
 
 setup(
     name="gym-industrial",
-    version="0.0.6",
+    version="0.0.7",
     author="Ângelo G. Lovatto",
     author_email="angelolovatto@gmail.com",
     description="Industrial Benchmark for OpenAI Gym",
