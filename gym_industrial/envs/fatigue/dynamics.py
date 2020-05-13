@@ -9,7 +9,7 @@ class FatigueParams:
     """Parameters for Fatigue dynamics."""
 
     action_tolerance: float = 0.05
-    amplification: float = 0.05
+    amplification: float = 1.1
     amplification_max: float = 5.0
     amplification_start: float = 1.2
     exp_lambda: float = 0.1
