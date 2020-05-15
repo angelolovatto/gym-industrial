@@ -41,7 +41,9 @@ The graphical notation used and the SCG definition are taken from [Gradient Esti
 > 3. Stochastic nodes, which are distributed conditionally on their parents.
 Each parent v of a non-input node w is connected to it by a directed edge (v, w).
 
-Squares denote deterministic nodes and circles, stochastic nodes. A special type of deterministic node, denoted by diamonds, indicates that a variable is a cost/reward and thus not part of the observation/state.
+Squares denote deterministic nodes and circles, stochastic nodes. A special type of deterministic node, denoted by diamonds, indicates that a variable is a cost/reward to be optimized. 
+
+Input nodes are part of the markovian state, which is avaible in the `info` returned by `env.step`. If an input variable has no explicit equivalent in the next timestep, it is unchanged.
 
 Node labels use the notation from the Industrial Benchmark [paper](https://arxiv.org/abs/1709.09480) and correspond to the variables in the equations therein.
 
@@ -52,7 +54,7 @@ The observation of operational cost is delayed and blurred by a convolution of p
 
 > The motivation for this dynamical behavior is that it is non-linear, it depends on more than one influence, and it is delayed and blurred. All those effects have been observed in industrial applications, like the heating process observable during combustion.
 
-<center><img src=https://i.imgur.com/ZKHaVGD.png width=400></center>
+<center><img src=https://i.imgur.com/A1e7bt6.png width=400></center>
 
 <!-- ![](https://i.imgur.com/ZKHaVGD.png =400x)
  -->
@@ -62,7 +64,8 @@ The observation of operational cost is delayed and blurred by a convolution of p
 
 The Goldstone potential-inspired reward is denoted below by the ![m_{t+1}](https://render.githubusercontent.com/render/math?math=m_%7Bt%2B1%7D) node for ease of presentation. Details of the function can be found in the [implementation](gym_industrial/envs/mis_calibration/goldstone.py) or in Appendix B of the paper.
 
-<img src=https://i.imgur.com/VwS8RV9.png height=400>
+![](https://i.imgur.com/NalsXQw.png)
+
 
 Below is a visual description, taken from the paper, of the penalty landscape and oscillating dynamics.
 
@@ -76,6 +79,9 @@ Below is a visual description, taken from the paper, of the penalty landscape an
 The following SCG highlights the complex stochasticity of the Fatigue dynamics. The random variables don't have dedicated equations in the paper, but are sampled as follows (![\exp](https://render.githubusercontent.com/render/math?math=%5Cexp) denotes the [exponential](https://en.wikipedia.org/wiki/Exponential_distribution) distribution and ![\sigma](https://render.githubusercontent.com/render/math?math=%5Csigma), the [logistic](https://en.wikipedia.org/wiki/Sigmoid_function) function).
 
 <center><img src=https://i.imgur.com/GT8nngO.png width=300></center>
+
+![](https://i.imgur.com/JwcgchB.png)
+
 <!-- $$
 \begin{gather*}
 \eta^{ve}, \eta^{ge} \sim \sigma(\exp(\lambda)) \\
@@ -86,10 +92,8 @@ The following SCG highlights the complex stochasticity of the Fatigue dynamics. 
 $$
  -->
 
-![](https://i.imgur.com/9hoVxh7.png)
 
-
-### Reward function
+### `IndustrialBenchmark-v0` reward function
 > In the real-world tasks that motivated the IB, the reward function has always been known explicitly. In some cases it itself was subject to optimization and had to be adjusted to properly express the optimization goal. For the IB we therefore assume that the reward function is known and all variables influencing it are observable.
 
 <center><img src=https://i.imgur.com/E9Vx5yO.png width=400x></center>
