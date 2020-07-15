@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "gym-industrial"
+version = "0.0.7"
+description = "Industrial Benchmark for OpenAI Gym"
+authors = ["Ângelo Lovatto <angelolovatto@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/angelolovatto/gym-industrial"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+gym = "^0.17.2"
+numpy = "^1.19.0"
+
+[tool.poetry.dev-dependencies]
+mypy = "^0.782"
+reorder-python-imports = "^2.3.1"
+pylint = "^2.5.3"
+auto-changelog = "^0.5.1"
+pytest-sugar = "^0.9.4"
+pytest = "^5.4.3"
+black = "^19.10b0"
+ipython = "^7.16.1"
+pre-commit = "^2.6.0"
+flake8 = "^3.8.3"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
