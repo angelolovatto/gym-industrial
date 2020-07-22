@@ -160,21 +160,6 @@ class IndustrialBenchmarkEnv(gym.Env):
 
         return self._get_obs(next_state), reward, done, self._get_info()
 
-    def _get_obs(self, state):
-        visible = state[..., :6]
-        if self.params.obs_type == "visible":
-            return visible.astype(np.float32)
-
-        # current operational cost can be inferred from setpoint, velocity, and gain
-        oc_latent = state[..., 6:16]
-        oc_latent = oc_latent[..., 1:]
-
-        mc_latent = state[..., 16:19]
-        fat_latent = state[..., 19:]
-        return np.concatenate(
-            [visible, oc_latent, mc_latent, fat_latent], axis=-1
-        ).astype(np.float32)
-
     def _get_action(self, action):
         if self.params.action_type == "continuous":
             return action
@@ -183,32 +168,8 @@ class IndustrialBenchmarkEnv(gym.Env):
         )
         return ternary - 1
 
-    def _get_info(self):
-        # pylint:disable=unbalanced-tuple-unpacking
-        state = self.state
-        setpoint, velocity, gain, shift = state[:4].tolist()
-        consumption, fatigue = state[4:6].tolist()
-        theta_vec = state[6:16].tolist()
-        history = {f"op_cost(t-{i})": theta for i, theta in enumerate(theta_vec)}
-        domain, system_response, phi = state[16:19].tolist()
-        mu_v, mu_g = state[19:].tolist()
-        return {
-            "setpoint": setpoint,
-            "velocity": velocity,
-            "gain": gain,
-            "shift": shift,
-            "consumption": consumption,
-            "fatigue": fatigue,
-            **history,
-            "domain": domain,
-            "system_response": system_response,
-            "phi": phi,
-            "hidden_velocity": mu_v,
-            "hidden_gain": mu_g,
-        }
-
     def _transition_fn(self, state, action):
-        # pylint:disable=unbalanced-tuple-unpacking
+        # pylint:disable=unbalanced-tuple-unpacking,too-many-locals
         setpoint, velocity, gain, shift = np.split(state[..., :4], 4, axis=-1)
         theta_vec = state[..., 6:16]
         domain, system_response, phi = np.split(state[..., 16:19], 3, axis=-1)
@@ -221,7 +182,9 @@ class IndustrialBenchmarkEnv(gym.Env):
         domain, system_response, phi = self.dynamics.mis_calibration.transition(
             setpoint, shift, domain, system_response, phi
         )
-        consumption = self._consumption(setpoint, shift, phi, theta_vec)
+        consumption, conv_cost, mc_penalty = self._consumption(
+            setpoint, shift, phi, theta_vec
+        )
         mu_v, mu_g, fatigue = self.dynamics.fatigue.transition(
             setpoint, velocity, gain, mu_v, mu_g
         )
@@ -240,6 +203,8 @@ class IndustrialBenchmarkEnv(gym.Env):
                 phi,
                 mu_v,
                 mu_g,
+                conv_cost[None],
+                mc_penalty,
             ],
             axis=-1,
         )
@@ -262,7 +227,7 @@ class IndustrialBenchmarkEnv(gym.Env):
 
         c_hat = conv_cost + 25 * penalty
         gauss = self.np_random.normal(0, 1 + 0.02 * c_hat)
-        return c_hat + gauss
+        return c_hat + gauss, conv_cost, penalty
 
     def _reward_fn(self, state, action, next_state):
         """Compute Equation (5)."""
@@ -281,3 +246,78 @@ class IndustrialBenchmarkEnv(gym.Env):
     @staticmethod
     def _terminal(_):
         return False
+
+    def _get_obs(self, state):
+        visible = state[..., :6]
+        if self.params.obs_type == "visible":
+            return visible.astype(np.float32)
+
+        oc_latent = self._get_oc_latent(state)
+        # current operational cost can be inferred from setpoint, velocity, and gain
+        oc_latent = oc_latent[..., 1:]
+        mc_latent = self._get_mc_latent(state)
+        fat_latent = self._get_fat_latent(state)
+
+        return np.concatenate(
+            [visible, oc_latent, mc_latent, fat_latent], axis=-1
+        ).astype(np.float32)
+
+    def _get_info(self):
+        # pylint:disable=unbalanced-tuple-unpacking
+        state = self.state
+        info = {}
+        info.update(self._visible_info(state))
+        info.update(self._opcost_info(state))
+        info.update(self._miscal_info(state))
+        info.update(self._fatigue_info(state))
+        return info
+
+    @staticmethod
+    def _visible_info(state):
+        setpoint, velocity, gain, shift = state[:4].tolist()
+        consumption, fatigue = state[4:6].tolist()
+        return {
+            "setpoint": setpoint,
+            "velocity": velocity,
+            "gain": gain,
+            "shift": shift,
+            "consumption": consumption,
+            "fatigue": fatigue,
+        }
+
+    def _opcost_info(self, state):
+        theta_vec = self._get_oc_latent(state).tolist()
+        history = {
+            f"op_cost(t{-i if i else ''})": theta for i, theta in enumerate(theta_vec)
+        }
+        conv_cost = state[21]
+        return {**history, "conv_cost": conv_cost}
+
+    def _miscal_info(self, state):
+        domain, system_response, phi = self._get_mc_latent(state).tolist()
+        mc_penalty = state[22]
+        return {
+            "domain": domain,
+            "system_response": system_response,
+            "phi": phi,
+            "mis_calibration": mc_penalty,
+        }
+
+    def _fatigue_info(self, state):
+        mu_v, mu_g = self._get_fat_latent(state).tolist()
+        return {
+            "hidden_velocity": mu_v,
+            "hidden_gain": mu_g,
+        }
+
+    @staticmethod
+    def _get_oc_latent(state):
+        return state[..., 6:16]
+
+    @staticmethod
+    def _get_mc_latent(state):
+        return state[..., 16:19]
+
+    @staticmethod
+    def _get_fat_latent(state):
+        return state[..., 19:21]

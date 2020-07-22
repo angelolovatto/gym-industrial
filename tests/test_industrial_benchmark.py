@@ -66,7 +66,7 @@ def test_step(env):
     assert isinstance(done, bool)
     assert isinstance(info, dict)
 
-    op_cost_keys = [f"op_cost(t-{i})" for i in range(10)]
+    op_cost_keys = [f"op_cost(t{-i if i else ''})" for i in range(10)]
     assert all(
         k in info and np.isscalar(info[k])
         for k in "setpoint velocity gain shift domain system_response "
